@@ -1,0 +1,24 @@
+.product-container {
+    position: relative;
+    width: 200px; /* Ürün kartının genişliği */
+    height: 300px; /* Ürün kartının yüksekliği */
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    overflow: hidden;
+    margin: 10px;
+  }
+  
+  .favorite-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .favorite-icon {
+    color: red; /* Favori ikonu rengi */
+    font-size: 24px;
+  }
+  

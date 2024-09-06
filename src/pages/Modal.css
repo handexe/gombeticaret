@@ -1,0 +1,27 @@
+.modal-body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.modal-dialog {
+  max-width: 500px;
+  margin: auto;
+}
+
+.modal-title {
+  text-align: center;
+  font-weight: bold;
+  font-size: 24px;
+}
+
+.modal-body label {
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.modal-body input {
+  width: 100%;
+  margin-bottom: 15px;
+}
