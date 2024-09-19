@@ -6,6 +6,7 @@ import {
 } from "../redux/slices/productSlices";
 import { Button, Card, Col, Container, Row, Image } from "react-bootstrap";
 import { Link } from "react-router-dom";
+import ImageCarousel from "../components/product/ImageCarousel";
 
 const NewProducts = () => {
   const dispatch = useDispatch();
@@ -39,20 +40,15 @@ const NewProducts = () => {
               <Col key={product.id}>
                 <Card>
                   <Card.Body>
-                  <Link
+                  <ImageCarousel product={product} />
+                    <Link
                       to={`/item/${product.id}`}
                       className="link-light link-underline-opacity-0">
-                    <Image
-                      src={product.image}
-                      alt={product.name}
-                      className="card-img-top"
-                      style={{ height: "20rem" }}
-                    />
                     <Card.Title className="mt-2">{product.name}</Card.Title>
                     </Link>
                     <Card.Text>{product.price} ₺ </Card.Text>
                     <Card.Text>
-                     <small> Eklenme Tarihi: {new Date(product.addeddate).toLocaleDateString()} </small>
+                     <small> Eklenme Tarihi: {new Date(product.addedDate).toLocaleDateString()} </small>
                     </Card.Text>
                     <Button>Sepete Ekle</Button>
                   </Card.Body>
@@ -61,7 +57,7 @@ const NewProducts = () => {
             ))
           ) : (
             <Col>
-              <p>No new products available</p>
+              <p>Şu anlık burada bir şey yok</p>
             </Col>
           )}
         </Row>

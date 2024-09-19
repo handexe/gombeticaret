@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { loginUser } from "../../redux/slices/authSlices";
+import { login } from "../../redux/slices/authSlices";
 import { Form, Button, Alert } from "react-bootstrap";
 
 
-function Login() {
+function Login({ onSuccess }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -13,20 +13,20 @@ function Login() {
   const dispatch = useDispatch();
 
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true); // Loading state'i başlat
-
-    dispatch(loginUser({ email, password }))
-      .unwrap()
-      .then(() => {
-        setLoading(false);
-
-      })
-      .catch((err) => {
-        setLoading(false);
-        setError(err.message || 'An unknown error occurred');
-      });
+    setLoading(true);
+    dispatch(login({ email, password }))
+    .then(() => {
+      setLoading(false);
+      if (onSuccess) {
+        onSuccess();  // Başarılı girişten sonra modal'ı kapatmak için onSuccess çağrılıyor
+      }
+    })
+    .catch((err) => {
+      setLoading(false);
+      setError(err.message);
+    });
   };
 
   return (

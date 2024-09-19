@@ -1,60 +1,111 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
+import { db } from "../../api/api";
 
 // Sepeti getirme thunk'ı
 export const fetchCart = createAsyncThunk("cart/fetchCart", async (userId) => {
-  const response = await axios.get(`http://localhost:3001/cart/${userId}`);
-  return response.data;
+  const cartRef = doc(db, "carts", userId);
+  const docSnap = await getDoc(cartRef);
+  if (docSnap.exists()) {
+    return docSnap.data().items; // Sepet öğelerini döndür
+  } else {
+    return []; // Eğer belge yoksa boş döndür
+  }
 });
+
 // Sepete ürün ekleme thunk'ı
 export const addToCart = createAsyncThunk(
-  "cart/addToCart",
-  async ({ productId, name, image, price, quantity, userId }) => {
-    const response = await axios.post("http://localhost:3001/cart/add", {
-      productId,
-      quantity,
-      userId,
-      name,
-      image,
-      price,
-    });
-    return response.data;
+  'cart/addToCart',
+  async ({ productId, quantity, userId, name, image, price }) => {
+    try {
+      // Reference to the cart document for the user
+      const cartRef = doc(db, 'carts', userId);
+      const newItem = { productId, quantity, name, image, price };
+
+      // Fetch the current document data
+      const docSnap = await getDoc(cartRef);
+
+      if (docSnap.exists()) {
+        let existingItems = docSnap.data().items || []; // Ensure existingItems is always an array
+        console.log('Existing items:', existingItems);
+
+        // Check if the item already exists in the cart
+        const itemIndex = existingItems.findIndex(item => item.productId === productId);
+        console.log('Item index:', itemIndex);
+
+        if (itemIndex > -1) {
+          // If the item exists, update its quantity
+          existingItems[itemIndex].quantity += quantity;
+        } else {
+          // If the item does not exist, add it to the array
+          existingItems.push(newItem);
+        }
+
+        // Update the document with the new items array
+        await updateDoc(cartRef, { items: existingItems });
+      } else {
+        // If the document does not exist, create it with the new item
+        await setDoc(cartRef, { items: [newItem] });
+      }
+
+      return newItem; // Return the newly added item
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      throw error; // Rethrow the error to be handled by the thunk
+    }
   }
-); // Async thunk to increment quantity
+);
+
+
+// Miktarı arttırma thunk'ı
 export const incrementQuantity = createAsyncThunk(
   "cart/incrementQuantity",
   async ({ productId, userId }) => {
-    const response = await axios.put("http://localhost:3001/cart/update", {
-      ProductID: productId,
-      Quantity: 1, // Backend will increment this value
-      UserID: userId,
-    });
-    return response.data;
+    const cartRef = doc(db, "carts", userId);
+    const docSnap = await getDoc(cartRef);
+    if (docSnap.exists()) {
+      const items = docSnap.data().items;
+      const updatedItems = items.map((item) =>
+        item.productId === productId ? { ...item, quantity: item.quantity + 1 } : item
+      );
+      await updateDoc(cartRef, { items: updatedItems });
+      return { productId, quantity: 1 };
+    }
   }
 );
 
-// Async thunk to decrement quantity
+// Miktarı azaltma thunk'ı
 export const decrementQuantity = createAsyncThunk(
   "cart/decrementQuantity",
-  async ({ productId, quantity, userId }) => {
-    const newQuantity = quantity - 1;
-    const response = await axios.put("http://localhost:3001/cart/update", {
-      ProductID: productId,
-      Quantity: newQuantity,
-      UserID: userId,
-    });
-    return response.data;
+  async ({ productId, userId }) => {
+    const cartRef = doc(db, "carts", userId);
+    const docSnap = await getDoc(cartRef);
+    if (docSnap.exists()) {
+      const items = docSnap.data().items;
+      const updatedItems = items
+        .map((item) =>
+          item.productId === productId ? { ...item, quantity: item.quantity - 1 } : item
+        )
+        .filter((item) => item.quantity > 0);
+      await updateDoc(cartRef, { items: updatedItems });
+      return { productId, quantity: -1 };
+    }
   }
 );
 
-// Async thunk to remove an item from the cart
+// Sepetten ürün çıkarma thunk'ı
 export const removeFromCart = createAsyncThunk(
   "cart/removeFromCart",
   async ({ productId, userId }) => {
-    const response = await axios.delete("http://localhost:3001/cart/remove", {
-      data: { ProductID: productId, UserID: userId },
-    });
-    return response.data;
+    const cartRef = doc(db, "carts", userId);
+    const docSnap = await getDoc(cartRef);
+    if (docSnap.exists()) {
+      const updatedItems = docSnap
+        .data()
+        .items.filter((item) => item.productId !== productId);
+      await updateDoc(cartRef, { items: updatedItems });
+      return { productId };
+    }
   }
 );
 
@@ -65,11 +116,8 @@ const cartSlice = createSlice({
     status: "idle",
     error: null,
   },
-  reducers: {
-    // Update total cart value
-  },
+  reducers: {},
   extraReducers: (builder) => {
-    // Handle fetchCart lifecycle
     builder
       .addCase(fetchCart.pending, (state) => {
         state.status = "loading";
@@ -83,78 +131,29 @@ const cartSlice = createSlice({
         state.error = action.error.message;
       });
 
-    // Handle addToCart lifecycle
     builder
-      .addCase(addToCart.pending, (state) => {
-        state.status = "loading";
-      })
       .addCase(addToCart.fulfilled, (state, action) => {
-        state.status = "succeeded";
-        state.items.push(action.payload); // Add the new item to the cart
-      })
-      .addCase(addToCart.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.error.message;
-      });
-
-    // Handle incrementQuantity lifecycle
-    builder
-      .addCase(incrementQuantity.pending, (state) => {
-        state.status = "loading";
+        state.items.push(action.payload);
       })
       .addCase(incrementQuantity.fulfilled, (state, action) => {
-        state.status = "succeeded";
-        const updatedItem = action.payload;
-        const index = state.items.findIndex(
-          (item) => item.ProductID === updatedItem.ProductID
-        );
-        if (index !== -1) {
-          state.items[index].Quantity += 1; // Update the quantity of the item in the cart
+        const { productId } = action.payload;
+        const item = state.items.find((item) => item.productId === productId);
+        if (item) {
+          item.quantity += 1;
         }
       })
-      .addCase(incrementQuantity.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.error.message;
-      });
-
-    // Handle decrementQuantity lifecycle
-    builder
-      .addCase(decrementQuantity.pending, (state) => {
-        state.status = "loading";
-      })
       .addCase(decrementQuantity.fulfilled, (state, action) => {
-        state.status = "succeeded";
-        const updatedItem = action.payload;
-        const index = state.items.findIndex(
-          (item) => item.ProductID === updatedItem.ProductID
-        );
-        if (index !== -1) {
-          state.items[index].Quantity -= 1; // Decrease the quantity of the item in the cart
-          if (state.items[index].Quantity <= 0) {
-            state.items.splice(index, 1); // Remove item if the quantity is 0
+        const { productId } = action.payload;
+        const item = state.items.find((item) => item.productId === productId);
+        if (item) {
+          item.quantity -= 1;
+          if (item.quantity <= 0) {
+            state.items = state.items.filter((item) => item.productId !== productId);
           }
         }
       })
-      .addCase(decrementQuantity.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.error.message;
-      });
-
-    // Handle removeFromCart lifecycle
-    builder
-      .addCase(removeFromCart.pending, (state) => {
-        state.status = "loading";
-      })
       .addCase(removeFromCart.fulfilled, (state, action) => {
-        state.status = "succeeded";
-        const removedItem = action.payload;
-        state.items = state.items.filter(
-          (item) => item.ProductID !== removedItem.ProductID
-        ); // Remove the item from the cart
-      })
-      .addCase(removeFromCart.rejected, (state, action) => {
-        state.status = "failed";
-        state.error = action.error.message;
+        state.items = state.items.filter((item) => item.productId !== action.payload.productId);
       });
   },
 });

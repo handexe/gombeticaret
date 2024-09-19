@@ -1,8 +1,9 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchProducts, filterDiscounted } from "../redux/slices/productSlices";
-import {Button,  Card, Container, Col, Image, Row } from "react-bootstrap";
+import { Button, Card, Container, Col, Image, Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
+import ImageCarousel from "../components/product/ImageCarousel";
 
 const DiscountedPage = () => {
   const dispatch = useDispatch();
@@ -39,16 +40,11 @@ const DiscountedPage = () => {
               <Col key={product.id}>
                 <Card>
                   <Card.Body>
-                  <Link
+                    <ImageCarousel product={product} />
+                    <Link
                       to={`/item/${product.id}`}
                       className="link-light link-underline-opacity-0">
-                    <Image
-                      src={product.image}
-                      alt={product.name}
-                      className="card-img-top"
-                      style={{ height: "20rem" }}
-                    />
-                    <Card.Title className="mt-2">{product.name}</Card.Title>
+                      <Card.Title className="mt-2">{product.name}</Card.Title>
                     </Link>
                     <Card.Text>
                       <p>
@@ -58,7 +54,10 @@ const DiscountedPage = () => {
                       </p>
                     </Card.Text>
                     <Card.Text>
-                      <small>Eklenme Tarihi: {new Date(product.addeddate).toLocaleDateString()}</small>
+                      <small>
+                        Eklenme Tarihi:{" "}
+                        {new Date(product.addeddate).toLocaleDateString()}
+                      </small>
                     </Card.Text>
                     <Button> Sepete Ekle </Button>
                   </Card.Body>
@@ -67,7 +66,7 @@ const DiscountedPage = () => {
             ))
           ) : (
             <Col>
-              <p>No new products available</p>
+              <p>Şu anlık burada bir şey yok</p>
             </Col>
           )}
         </Row>

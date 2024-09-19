@@ -6,21 +6,23 @@ import {
 } from "../../redux/slices/productSlices";
 import { addToCart } from "../../redux/slices/cartSlices";
 import { Button, Card, Col, Row, Image, ListGroup } from "react-bootstrap";
-import { BsHeart } from "react-icons/bs";
+
 import { Link } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
+
+import { getDownloadURL, ref } from "firebase/storage";
+import { storage } from "../../api/api";
+import FavoriteButton from "../favorites/favorite";
+import ImageCarousel from "../product/ImageCarousel";
 
 const CategoryPage = () => {
   const dispatch = useDispatch();
+
+  const user = useSelector((state) => state.auth);
   const products = useSelector((state) => state.items.filteredProducts);
   const status = useSelector((state) => state.items.status);
   const error = useSelector((state) => state.items.error);
-  const categories = [
-    "El Çantaları",
-    "Omuz Çantaları",
-    "Sırt Çantaları",
-    "Cüzdanlar",
-  ]; // Örnek kategoriler
+
+  const categories = ["Hırdavat", "Elektrik", "Su Malzemeleri"]; // Örnek kategoriler
 
   const [selectedCategory, setSelectedCategory] = useState("Genel");
 
@@ -39,40 +41,77 @@ const CategoryPage = () => {
     setSelectedCategory(category);
     dispatch(filterByCategory(category)); // Kategoriye göre filtreleme
   };
-  const handleFavoriteClick = () => {};
-  const handleAddToCart = (item) => {
-    const token = localStorage.getItem("token");
-    let userId;
 
-    if (token) {
-      const decoded = jwtDecode(token);
-      userId = decoded.userId; // JWT'den userId'yi alın
-    } else {
-      // Eğer token yoksa, kullanıcı oturumu yoktur, hata işleyebilirsiniz
-      console.error("User is not authenticated");
+  const handleAddToCart = async (item) => {
+    if (!item) {
+      console.error("Ürün bilgileri bulunamadı");
+      alert("Ürün bilgileri alınamadı.");
+      return;
+    }
+    console.log("Item:", item);
+    console.log("User:", user);
+
+    if (!user) {
+      console.error("Kullanıcı girişi bulunamadı");
       alert("Lütfen giriş yapınız");
-      return null;
+      return;
     }
 
-    dispatch(
-      addToCart({
-        productId: item.id,
-        quantity: 1,
-        userId: userId, 
-        name: item.name,
-        image: item.image,
-        price: item.price,
-      })
-    );
-    alert(`${item.name} sepete eklendi`);
+    let userId = user.uid; // Kullanıcının ID'sini Redux state'inden alın
+
+    let imageUrl = item.image;
+
+    if (!imageUrl) {
+      try {
+        const imageRef = ref(storage, `images/${item.id}`);
+        imageUrl = await getDownloadURL(imageRef);
+      } catch (error) {
+        console.error("Resim alınırken hata meydana geldi ", error);
+        alert("Ürün resmi alınırken bir hata oluştu.");
+        return;
+      }
+    }
+
+    try {
+      await dispatch(
+        addToCart({
+          productId: item.id,
+          quantity: 1,
+          userId: userId,
+          name: item.name,
+          image: imageUrl,
+          price: item.price,
+        })
+      );
+
+      alert(`${item.name} sepete eklendi`);
+    } catch (error) {
+      console.error("Ürün sepete eklenirken bir hata oluştu: ", error);
+      alert("Ürün sepete eklenirken bir hata oluştu.");
+    }
   };
 
   if (status === "loading") {
-    return <div>Loading...</div>;
+    return (
+      <Card
+        data-bs-theme="dark"
+        style={{
+          backgroundColor: "#101415", // Koyu tema için arka plan rengi
+          color: "#fff", // Text color
+          height: "100%",
+
+          borderRadius: "1rem",
+          padding: "2rem",
+          textDecoration: "none",
+          width: "90%",
+        }}>
+        Yükleniyor...
+      </Card>
+    );
   }
 
   if (status === "failed") {
-    return <div>Error: {error}</div>;
+    return <div>Hata: {error}</div>;
   }
 
   return (
@@ -84,7 +123,7 @@ const CategoryPage = () => {
         height: "100%",
 
         borderRadius: "1rem",
-        padding: "2.5rem",
+        padding: "2rem",
         textDecoration: "none",
         width: "90%",
       }}>
@@ -118,28 +157,19 @@ const CategoryPage = () => {
         </Col>
 
         <Col lg={9}>
-          <Row xs={1} sm={2} md={3} lg={4} className="g-4">
+          <Row xs={1} sm={2} md={3} lg={3} className="g-4">
             {products && products.length > 0 ? (
               products.map((product) => (
                 <Col
                   key={product.id}
-                  className="mx-2 my-5 d-flex align-items-stretch">
-                  <Card style={{ width: "13rem" }}>
-                    <Link
-                      to={`/item/${product.id}`}
-                      className="link-light link-underline-opacity-0">
-                      <Image
-                        src={product.image}
-                        alt={product.name}
-                        className="card-img-top"
-                        style={{
-                          height: "13rem",
-                          objectFit: "scale-down",
-                          backgroundColor: "white",
-                        }}
-                      />
-                    </Link>
+                  className=" my-5 d-flex align-items-stretch">
+                  <Card style={{ width: "18rem" }} border="light">
                     <Card.Body>
+                      <Link
+                        to={`/item/${product.id}`}
+                        className="link-light link-underline-opacity-0">
+                        <ImageCarousel product={product} />
+                      </Link>
                       <Card.Title>
                         <div
                           style={{
@@ -152,13 +182,7 @@ const CategoryPage = () => {
                             className="link-light link-underline-opacity-0">
                             <h5>{product.name}</h5>
                           </Link>
-                          <Button variant="link">
-                            <BsHeart
-                              onClick={handleFavoriteClick}
-                              size={20}
-                              className="text-light"
-                            />
-                          </Button>
+                          <FavoriteButton itemId={product.id} />
                         </div>
                       </Card.Title>
                       <Card.Text>
@@ -168,19 +192,20 @@ const CategoryPage = () => {
                         <br />
                         <small>
                           {" "}
-                          Tarih :{" "}
-                          {new Date(product.addeddate).toLocaleDateString()}
+                          Eklenme Tarihi: {new Date(product.addedDate).toLocaleDateString()}
                         </small>
                       </Card.Text>
+                      </Card.Body>
+                      <Card.Footer>
                       <Button onClick={() => handleAddToCart(product)}>
                         Sepete Ekle
                       </Button>
-                    </Card.Body>
+                    </Card.Footer>
                   </Card>
                 </Col>
               ))
             ) : (
-              <div>No products available.</div>
+              <div>Şu anlık burası boş görünüyor.</div>
             )}
           </Row>
         </Col>

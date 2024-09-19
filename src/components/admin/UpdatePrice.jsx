@@ -20,10 +20,9 @@ const UpdatePrice = () => {
   });
 
   const categories = [
-    "El Çantaları",
-    "Omuz Çantaları",
-    "Sırt Çantaları",
-    "Cüzdanlar",
+    "Hırdavat",
+    "Elektrik",
+    "Su Malzemeleri",
   ];
   const [originalItem, setOriginalItem] = useState(null);
 
@@ -125,7 +124,7 @@ const UpdatePrice = () => {
             <Form.Group controlId="formImage">
               <Form.Label>Görsel URL</Form.Label>
               <Form.Control
-                type="text"
+                type="file"
                 name="image"
                 value={form.image}
                 onChange={handleChange}

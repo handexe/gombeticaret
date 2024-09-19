@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { registerUser } from '../../redux/slices/authSlices';
+import { register } from '../../redux/slices/authSlices';
 import { Form, Button,  Alert } from 'react-bootstrap';
 
 
-const Register = () => {
+const Register = ({ onSuccess }) => {
     const [name, setName] = useState('');
     const [surname, setSurname] = useState('');
     const [number, setNumber] = useState('');
@@ -16,20 +16,24 @@ const Register = () => {
     const dispatch = useDispatch();
 
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-        dispatch(registerUser({ name, surname, number, email, password }))
-            .then(() => {
-                setLoading(false);
-                // Başarılı kayıt işlemi için ek işlemler
-
-            })
-            .catch((err) => {
-                setLoading(false);
-                setError(err.message);
-            });
+        setError('');  // Hata mesajını temizleyin
+    
+        dispatch(register({ name, surname, number, email, password }))
+        .then(() => {
+          setLoading(false);
+          if (onSuccess) {
+            onSuccess();  // Başarılı kayıt işleminden sonra modal'ı kapatmak için onSuccess çağrılıyor
+          }
+        })
+        .catch((err) => {
+          setLoading(false);
+          setError(err.message);
+        });
     };
+    
 
     return (
         <div className="mt-5">

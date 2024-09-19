@@ -1,70 +1,111 @@
-# Getting Started with Create React App
+# E-Ticaret Sitesi
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Bu proje bir e-ticaret sitesi uygulamasıdır ve hem yerel (localhost) hem de Firebase üzerinde çalıştırılmak üzere tasarlanmıştır.
 
-## Available Scripts
+## Projeyi Başlatmak
 
-In the project directory, you can run:
+### 1. Yerel Ortam (Localhost) Üzerinde Çalıştırma
 
-### `npm start`
+Bunun için öncelikle src localhost klasörünü zipden çıkarmanız gerekiyor 
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+#### Gereksinimler
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- Node.js (v14 veya üzeri)
+- MySQL (Veritabanı için)
+- npm veya yarn (Paket yönetimi için)
 
-### `npm test`
+#### Adımlar
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+1. **Depoyu Kopyala:**
 
-### `npm run build`
+   ```bash
+   git clone <repository-url>
+   cd e-ticaret-sitesi
+   ```
+2. **Bağımlılıkları Yükleyin:**
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```bash
+npm install
+```	
+3.**Veritabanını Kurun:**
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+MySQL kullanarak bir veritabanı oluşturun ve yapılandırma dosyanıza (örneğin .env) veritabanı bilgilerinizi ekleyin.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+.env dosyasını oluşturun:
+```
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=password
+DB_NAME=eticaret
+```
+4.**API Sunucusunu Başlatın:**
 
-### `npm run eject`
+API sunucusu localhost:3001 portunda çalışacaktır.
+```
+npm run server
+React Uygulamasını Başlatın:
+```
+Uygulama ana frontend kısmını çalıştırmak için:
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+npm start
+Tarayıcıda Uygulamayı Açın:
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Uygulamanın yerel sürümünü görmek için tarayıcınızda şu adrese gidin:
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+http://localhost:3000
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
 
-## Learn More
+### 2. Firebase Üzerinde Yayınlama
+Gereksinimler
+Firebase CLI
+Firebase hesabı
+Firebase'e Yayınlama Adımları
+Firebase CLI'yi Kurun:
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+1.**Firebase CLI'yi global olarak yükleyin:**
+```
+npm install -g firebase-tools
+```
+2.**Firebase'e Giriş Yapın:**
 
-To learn React, check out the [React documentation](https://reactjs.org/).
 
-### Code Splitting
+Firebase hesabınıza giriş yapmak için:
+```
+firebase login
+```
+3.**Firebase Projesini Başlatın:**
+	
+Firebase projesini oluşturmak veya mevcut bir projeyi kullanmak için:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+firebase init
+Hosting ve Firestore gibi seçenekleri seçin.
+build klasörünüzün Firebase hosting olarak ayarlanmasını sağlayın.
 
-### Analyzing the Bundle Size
+4.**Build İşlemi:**
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+React uygulamasını üretim ortamı için derleyin:
 
-### Making a Progressive Web App
+npm run build
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+5.**Firebase'e Yayınlama:**
 
-### Advanced Configuration
+Firebase'e projenizi şu komut ile gönderin:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+firebase deploy
+Firebase üzerinde barındırılan uygulamaya erişmek için Firebase'den aldığınız domain adresini kullanabilirsiniz.
 
-### Deployment
+### Özellikler
+Ürün listeleme
+Sepete ürün ekleme ve silme
+Ürün detay sayfası
+Kullanıcı girişi ve kaydı (JWT ile)
+Admin paneli (Ürün yönetimi için)
+Teknolojiler
+React
+Redux
+MySQL
+Firebase Hosting
+Node.js (API)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
 
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Bu README dosyası, projenizin hem yerel olarak hem de Firebase'de nasıl çalıştırılacağını ve yapılandırılacağını adım adım açıklıyor. Eğer eklemek istediğiniz özel bilgiler veya projeye dair başka gereksinimler varsa onları da dahil edebiliriz.

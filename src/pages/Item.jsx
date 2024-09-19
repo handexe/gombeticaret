@@ -2,8 +2,10 @@ import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { fetchItemById } from "../redux/slices/productSlices";
-import {addToCart} from '../redux/slices/cartSlices'
+import { addToCart } from "../redux/slices/cartSlices";
 import { Button, Container, Col, Row } from "react-bootstrap";
+import ImageCarousel from "../components/product/ImageCarousel";
+
 const Item = () => {
   const { id } = useParams(); // Get the ID from the URL
   const dispatch = useDispatch();
@@ -16,31 +18,54 @@ const Item = () => {
       dispatch(fetchItemById(id));
     }
   }, [id, dispatch]);
+
   const handleAddToCart = (product) => {
-    dispatch(addToCart(product)); // Sepete ekleme
+    dispatch(addToCart(product)); // Add to cart
   };
 
-  if (status === "loading") return <div>Loading...</div>;
-  if (status === "failed") return <div>{error}</div>;
+  if (status === "loading")
+    return (
+      <Container
+        style={{
+          backgroundColor: "#101415", // Dark theme background color
+          color: "#fff",
+          height: "100%",
+          borderRadius: "1rem",
+          padding: "3rem",
+          marginTop: "1rem",
+        }}>
+        Yükleniyor...
+      </Container>
+    );
+  if (status === "failed")
+    return (
+      <Container
+        style={{
+          backgroundColor: "#101415", // Dark theme background color
+          color: "#fff",
+          height: "100%",
+          borderRadius: "1rem",
+          padding: "3rem",
+          marginTop: "1rem",
+        }}>
+        Hata: {error}
+      </Container>
+    );
 
   return (
     <Container
-    style={{
-      backgroundColor: "#101415", // Koyu tema için arka plan rengi
-      color: "#fff",
-      height: "100%",
-      borderRadius: "1rem",
-      padding: "3rem",
-      marginTop: "1rem",
-    }}>
+      style={{
+        backgroundColor: "#101415", // Dark theme background color
+        color: "#fff",
+        height: "100%",
+        borderRadius: "1rem",
+        padding: "3rem",
+        marginTop: "1rem",
+      }}>
       {itemDetails ? (
         <Row>
           <Col>
-            <img
-              src={itemDetails.image}
-              alt={itemDetails.name}
-              style={{ height: "20rem", objectFit: "scale-down" ,backgroundColor: "white" }}
-            />
+            <ImageCarousel product={itemDetails} />
           </Col>
           <Col>
             <h1>{itemDetails.name}</h1>
@@ -48,9 +73,11 @@ const Item = () => {
             <p>Kategori: {itemDetails.category}</p>
             <p>
               Eklenme Tarihi:{" "}
-              {new Date(itemDetails.addeddate).toLocaleDateString()}
+              {new Date(itemDetails.addedDate).toLocaleDateString()}
             </p>
-            <Button  onClick={() => handleAddToCart(itemDetails)}>Sepete Ekle</Button>
+            <Button onClick={() => handleAddToCart(itemDetails)}>
+              Sepete Ekle
+            </Button>
           </Col>
         </Row>
       ) : (

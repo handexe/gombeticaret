@@ -1,73 +1,132 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { auth , db } from "../../api/api";
+import {  doc , setDoc } from 'firebase/firestore'
+import { createUserWithEmailAndPassword , signInWithEmailAndPassword ,signOut} from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
 
-// Kullanıcı kayıt işlemi
-export const registerUser = createAsyncThunk('auth/register', async (userData, { rejectWithValue }) => {
+export const register = createAsyncThunk(
+  "auth/register",
+  async ({ name, surname, number, email, password }, { rejectWithValue }) => {
     try {
-        const response = await axios.post('http://localhost:3001/register', userData);
-        return response.data;
-    } catch (error) {
-        // Hata mesajını çıkartmak için uygun formatı kullanın
-        return rejectWithValue(error.response?.data || { message: 'An unknown error occurred' });
-    }
-});
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userId = userCredential.user.uid;
 
-// Kullanıcı giriş işlemi
-export const loginUser = createAsyncThunk('auth/login', async (userData, { rejectWithValue }) => {
-    try {
-        const response = await axios.post('http://localhost:3001/login', userData);
-        return response.data;
+      // Add user data to Firestore
+      await setDoc(doc(db, "users", userId), {
+        name,
+        surname,
+        number,
+        email,
+        favorites: [] // Initialize with empty favorites
+      });
+
+      return { uid: userId, email };
     } catch (error) {
-        // Hata mesajını çıkartmak için uygun formatı kullanın
-        return rejectWithValue(error.response?.data || { message: 'An unknown error occurred' });
+      return rejectWithValue(error.message);
     }
-});
+  }
+);
+export const login = createAsyncThunk(
+  "auth/login",
+  async ({ email, password }, { rejectWithValue }) => {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      return { uid: userCredential.user.uid, email: userCredential.user.email };
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+export const logout = createAsyncThunk(
+  "auth/logout",
+  async (_, { rejectWithValue }) => {
+    try {
+      await signOut(auth);
+      return {}; // Return empty object on success
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
 
 const authSlice = createSlice({
-    name: 'auth',
-    initialState: {
-        user: null,
-        token: null,
-        loading: false,
-        error: null,
+  name: "auth",
+  initialState: {
+    uid: null,
+    email: null,
+    loading: false,
+    error: null,
+  },
+  reducers: {
+    // Action to set the user information
+    setUser: (state, action) => {
+      const { uid, email } = action.payload;
+      state.uid = uid;
+      state.email = email;
     },
-    reducers: {
-        logout: (state) => {
-            state.user = null;
-            state.token = null;
-            localStorage.removeItem('token');
-        },
+    // Action to clear the user information
+    clearUser: (state) => {
+      state.uid = null;
+      state.email = null;
     },
-    extraReducers: (builder) => {
-        builder
-            .addCase(registerUser.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(registerUser.fulfilled, (state, action) => {
-                state.loading = false;
-                state.user = action.payload.user;
-            })
-            .addCase(registerUser.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload;
-            })
-            .addCase(loginUser.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(loginUser.fulfilled, (state, action) => {
-                state.loading = false;
-                state.user = action.payload.user;
-                state.token = action.payload.token;
-                localStorage.setItem('token', action.payload.token); // JWT token'ı localStorage'da sakla
-            })
-            .addCase(loginUser.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload;
-            });
-    },
+  },
+  extraReducers: (builder) => {
+    builder
+      // Register case
+      .addCase(register.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(register.fulfilled, (state, action) => {
+        state.uid = action.payload.uid;
+        state.email = action.payload.email;
+        state.loading = false;
+      })
+      .addCase(register.rejected, (state, action) => {
+        state.error = action.payload;
+        state.loading = false;
+      })
+      // Login case
+      .addCase(login.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(login.fulfilled, (state, action) => {
+        state.uid = action.payload.uid;
+        state.email = action.payload.email;
+        state.loading = false;
+      })
+      .addCase(login.rejected, (state, action) => {
+        state.error = action.payload;
+        state.loading = false;
+      })
+      // Logout case
+      .addCase(logout.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(logout.fulfilled, (state) => {
+        state.uid = null;
+        state.email = null;
+        state.loading = false;
+      })
+      .addCase(logout.rejected, (state, action) => {
+        state.error = action.payload;
+        state.loading = false;
+      });
+  },
 });
 
-export const { logout } = authSlice.actions;
+
+
+export const listenForAuthChanges = () => (dispatch) => {
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      dispatch(setUser({ uid: user.uid, email: user.email }));
+    } else {
+      dispatch(logout());
+    }
+  });
+};
+export const { setUser, clearUser  } = authSlice.actions;
 export default authSlice.reducer;
