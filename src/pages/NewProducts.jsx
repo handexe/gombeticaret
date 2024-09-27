@@ -4,7 +4,7 @@ import {
   fetchProducts,
   filterNewArrivals,
 } from "../redux/slices/productSlices";
-import { Button, Card, Col, Container, Row, Image } from "react-bootstrap";
+import { Button, Card, Col, Container, Row} from "react-bootstrap";
 import { Link } from "react-router-dom";
 import ImageCarousel from "../components/product/ImageCarousel";
 
@@ -18,7 +18,24 @@ const NewProducts = () => {
     });
   }, [dispatch]);
 
-  if (status === "loading") return <div>Loading...</div>;
+  if (status === "loading")
+    return (
+      <Container className="p-4">
+      <Card.Title as="h2">Yeni Gelenler</Card.Title>
+      <Card
+        data-bs-theme="dark"
+        style={{
+          backgroundColor: "#101415", // Koyu tema için arka plan rengi
+          color: "#fff",
+          height: "100%",
+          borderRadius: "1rem",
+          padding: "3rem",
+          marginTop: "1rem",
+        }}>
+        Yükleniyor...
+      </Card>
+      </Container>
+    );
   if (status === "failed") return <div>Error loading products</div>;
 
   return (
@@ -40,15 +57,19 @@ const NewProducts = () => {
               <Col key={product.id}>
                 <Card>
                   <Card.Body>
-                  <ImageCarousel product={product} />
+                    <ImageCarousel product={product} />
                     <Link
                       to={`/item/${product.id}`}
                       className="link-light link-underline-opacity-0">
-                    <Card.Title className="mt-2">{product.name}</Card.Title>
+                      <Card.Title className="mt-2">{product.name}</Card.Title>
                     </Link>
                     <Card.Text>{product.price} ₺ </Card.Text>
                     <Card.Text>
-                     <small> Eklenme Tarihi: {new Date(product.addedDate).toLocaleDateString()} </small>
+                      <small>
+                        {" "}
+                        Eklenme Tarihi:{" "}
+                        {new Date(product.addedDate).toLocaleDateString()}{" "}
+                      </small>
                     </Card.Text>
                     <Button>Sepete Ekle</Button>
                   </Card.Body>

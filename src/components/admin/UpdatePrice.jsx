@@ -36,7 +36,7 @@ const UpdatePrice = () => {
   };
 
   const handleSelectItem = (event) => {
-    const itemId = Number(event.target.value);
+    const itemId = event.target.value; // Seçilen ürünün ID'sini alıyoruz
 
     const selectedItem = items.find((item) => item.id === itemId);
 
@@ -54,7 +54,7 @@ const UpdatePrice = () => {
     const updatedProduct = {
       id: form.id,
       name: form.name || originalItem?.name,
-      price: form.price || originalItem?.price,
+      price: parseFloat(form.price) || originalItem?.price, // Fiyatı sayıya çeviriyoruz
       image: form.image || originalItem?.image,
       favorites: originalItem?.favorites,
       category: form.category || originalItem?.category,
@@ -63,6 +63,15 @@ const UpdatePrice = () => {
     dispatch(updateProductPrice(updatedProduct)).then(() => {
       // Güncelleme işlemi tamamlandığında ürünleri yeniden yükleyin
       dispatch(fetchProducts());
+      // Formu sıfırlamak isteyebilirsiniz
+      setForm({
+        id: "",
+        name: "",
+        price: "",
+        image: "",
+        favorites: 0,
+        category: "",
+      });
     });
   };
 
@@ -71,13 +80,12 @@ const UpdatePrice = () => {
       data-bs-theme="dark"
       style={{
         backgroundColor: "#101415", // Koyu tema için arka plan rengi
-        borderRadius:"1rem",
+        borderRadius: "1rem",
         padding: "2rem",
         marginTop: "1rem"
       }}>
       <h2 className="my-4" style={{color: "#fff"}} >Ürün Güncelleme</h2>
-      <Form onSubmit={handleSubmit} 
-      style={{color : "#fff"}}>
+      <Form onSubmit={handleSubmit} style={{color : "#fff"}}>
         <Row className="mb-3">
           <Col>
             <Form.Group controlId="selectItem">
@@ -86,7 +94,7 @@ const UpdatePrice = () => {
                 <option value="">Ürün Seç</option>
                 {items.map((item) => (
                   <option key={item.id} value={item.id}>
-                    {item.id} - {item.name}
+                    {item.name}  {/* Ürün ID yerine ismini gösteriyoruz */}
                   </option>
                 ))}
               </Form.Control>
@@ -124,7 +132,7 @@ const UpdatePrice = () => {
             <Form.Group controlId="formImage">
               <Form.Label>Görsel URL</Form.Label>
               <Form.Control
-                type="file"
+                type="text"  // Dosya yüklemesi yerine URL alıyoruz
                 name="image"
                 value={form.image}
                 onChange={handleChange}

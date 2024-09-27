@@ -1,17 +1,24 @@
-import React, { useEffect } from "react";
+import React, { useEffect ,useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { fetchItemById } from "../redux/slices/productSlices";
-import { addToCart } from "../redux/slices/cartSlices";
 import { Button, Container, Col, Row } from "react-bootstrap";
 import ImageCarousel from "../components/product/ImageCarousel";
+import HandleAddToCart from "../helpers/HandleAddToCart";
+import Warning from "../components/Toast/Warning"; 
 
 const Item = () => {
   const { id } = useParams(); // Get the ID from the URL
   const dispatch = useDispatch();
+  
+  const [showToast, setShowToast] = useState(false); // Toast state
+
   const itemDetails = useSelector((state) => state.items.selectedItem);
   const status = useSelector((state) => state.items.status);
   const error = useSelector((state) => state.items.error);
+
+  const user = useSelector((state) => state.auth.uid);
+
 
   useEffect(() => {
     if (id) {
@@ -19,9 +26,6 @@ const Item = () => {
     }
   }, [id, dispatch]);
 
-  const handleAddToCart = (product) => {
-    dispatch(addToCart(product)); // Add to cart
-  };
 
   if (status === "loading")
     return (
@@ -75,10 +79,20 @@ const Item = () => {
               Eklenme Tarihi:{" "}
               {new Date(itemDetails.addedDate).toLocaleDateString()}
             </p>
-            <Button onClick={() => handleAddToCart(itemDetails)}>
+            <Button
+              onClick={() =>
+                HandleAddToCart(
+                  itemDetails,
+                  dispatch,
+                  user,
+                  showToast,
+                  setShowToast
+                )
+              }>
               Sepete Ekle
             </Button>
           </Col>
+          <Warning toast={showToast} setShowToast={setShowToast} />
         </Row>
       ) : (
         <Row>Item not found</Row>

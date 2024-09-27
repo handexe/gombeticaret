@@ -121,9 +121,9 @@ const Cart = () => {
                   className="d-flex justify-content-between align-items-center mb-2">
                   <ImageCarousel
                     product={item}
-                    style={{ width: "8rem", marginRight: "2rem" }}
+                    style={{ width: "8rem" }}
                   />
-                  <div style={{ width: "18rem" }}>
+                  <div style={{ width: "30rem" }}>
                     {item.name}
                     <br />
                     Adedi: {item.quantity}
@@ -135,13 +135,15 @@ const Cart = () => {
 
                   <div>
                     <Button
-                      className="mx-2"
+                    style={{ width: "2.5rem"}}
+                      className="me-2"
                       variant="outline-light"
                       onClick={() => handleIncrement(item)}>
                       +
                     </Button>
                     <Button
-                      className="mx-2"
+                    style={{ width: "2.5rem"}}
+                      className="ms-2"
                       variant="outline-light"
                       onClick={() => handleDecrement(item)}
                       disabled={item.quantity === 1}>

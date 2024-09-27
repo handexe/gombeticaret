@@ -65,7 +65,7 @@ export const updateProductPrice = createAsyncThunk(
     const docRef = doc(db, "items", updatedItem.id);
 
     // Fetch the current document
-    const docSnap = await getDocs(docRef);
+    const docSnap = await getDoc(docRef);
     if (!docSnap.exists()) {
       throw new Error("Product not found");
     }
@@ -79,14 +79,8 @@ export const updateProductPrice = createAsyncThunk(
 );
 export const filterDiscounted = createAsyncThunk(
   "items/filterDiscounted",
-  async () => {
-    const q = query(collection(db, "items"), where("oldprice", ">", "price"));
-
-    const querySnapshot = await getDocs(q);
-    const discountedItems = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+  async (items) => {
+    const discountedItems = items.filter(item => item.oldprice > item.price);
     return discountedItems;
   }
 );
@@ -136,6 +130,7 @@ const productSlice = createSlice({
     newArrivals: [],
     searchResults: [],
     selectedItem: null,
+    discountedItems: [],
     status: "idle",
     error: null,
   },
@@ -158,6 +153,7 @@ const productSlice = createSlice({
         return diffDays <= 30; // Son 30 gün içinde eklenen ürünler
       });
     },
+
   },
   extraReducers: (builder) => {
     builder
@@ -172,9 +168,8 @@ const productSlice = createSlice({
         state.status = "succeeded";
         state.items = action.payload; // Veriyi state.items'a kaydet
         // Fiyatı düşen ürünleri güncelle
-        state.discountedProducts = action.payload.filter(
-          (item) => item.discount > 0
-        );
+        state.discountedItems = action.payload.filter(item => item.oldprice > item.price);
+
       })
       .addCase(fetchProducts.rejected, (state, action) => {
         state.status = "failed";
@@ -198,9 +193,9 @@ const productSlice = createSlice({
           state.items[index] = action.payload;
         }
       })
-      // filtreleme
+      // fiyat filtreleme
       .addCase(filterDiscounted.fulfilled, (state, action) => {
-        state.filteredProducts = action.payload;
+        state.discountedItems = action.payload;
       })
       // arama yapma
       .addCase(searchProducts.pending, (state) => {
@@ -229,5 +224,5 @@ const productSlice = createSlice({
       });
   },
 });
-export const { filterByCategory, filterNewArrivals } = productSlice.actions;
+export const { filterByCategory, filterNewArrivals , setDiscountedItems} = productSlice.actions;
 export default productSlice.reducer;
